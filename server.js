@@ -1,3 +1,14 @@
+/*********************************************************************************
+*  WEB322 – Assignment 02
+*  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source 
+*  (including 3rd party web sites) or distributed to other students.
+* 
+*  Name: Huu Tinh Luu Student ID: 152712196 Date: 2/3/2023
+*
+*  Online (Cyclic) Link: https://gentle-pullover-pike.cyclic.app
+*
+********************************************************************************/ 
+
 var express = require("express");
 var blogService = require(__dirname + "/blog-service.js");
 var path = require("path");
