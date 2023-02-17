@@ -54,3 +54,53 @@ module.exports.getCategories = function() {
         }
     })
 };
+
+module.exports.addPost = function(postData) {
+    return new Promise((resolve, reject) => {
+        if(postData.published == undefined) {
+            postData.published = false;
+        } else {
+            postData.published = true;
+        }
+
+        postData.id = posts.length + 1; 
+        posts.push(postData);
+        resolve(postData);
+    })
+}
+
+module.exports.getPostsByCategory = function(category) {
+    return new Promise((resolve, reject) => {
+        let categoriedPost = posts.filter(post => post.category == category);
+
+        if (categoriedPost.length == 0) {
+            reject('no result returned');
+        } else {
+            resolve(categoriedPost);
+        }
+    })
+}
+
+module.exports.getPostsByMinDate = function(minDateStr) {
+    return new Promise((resolve, reject) => {
+        let filteredPost = posts.filter(post => (new Date(post.postDate)) >= (new Date(minDateStr)));
+
+        if (filteredPost.length == 0) {
+            reject('no result returned');
+        } else {
+            resolve(filteredPost);
+        }
+    })
+}
+
+module.exports.getPostById = function(id) {
+    return new Promise((resolve, reject) => {
+        let postById = posts.find(post => post.id == id);
+
+        if (postById) {
+            resolve(postById);
+        } else {
+            reject('no result returned');
+        }
+    })
+}
