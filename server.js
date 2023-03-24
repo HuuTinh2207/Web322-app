@@ -1,9 +1,9 @@
 /*********************************************************************************
-*  WEB322 – Assignment 04
+*  WEB322 – Assignment 05
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 * 
-*  Name: Huu Tinh Luu Student ID: 152712196 Date: 3/10/2023
+*  Name: Huu Tinh Luu Student ID: 152712196 Date: 3/24/2023
 *
 *  Online (Cyclic) Link: https://brave-red-kangaroo.cyclic.app/
 *
@@ -40,7 +40,13 @@ app.engine('.hbs', exphbs.engine({
     },
     safeHTML: function (context) {
       return stripJs(context);
-    }
+    },
+    formatDate: function(dateObj){
+      let year = dateObj.getFullYear();
+      let month = (dateObj.getMonth() + 1).toString();
+      let day = dateObj.getDate().toString();
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2,'0')}`;
+    }  
   }
 }))
 
@@ -63,6 +69,17 @@ app.use(express.static('public'));
 app.use(function (req, res, next) {
   let route = req.path.substring(1);
   app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+  app.locals.viewingCategory = req.query.category;
+  next();
+});
+app.use(express.urlencoded({extended: true}));
+app.use(function (req, res, next) {
+  let route = req.path.substring(1);
+  app.locals.activeRoute =
+    "/" +
+    (isNaN(route.split("/")[1])
+      ? route.replace(/\/(?!.*)/, "")
+      : route.replace(/\/(.*)/, ""));
   app.locals.viewingCategory = req.query.category;
   next();
 });
@@ -140,14 +157,23 @@ app.get("/posts", function (req, res) {
   } else {
     query = blogService.getAllPosts();
   }
-
+   
   query.then((data) => {
-    res.render("posts", { posts: data });
+    if (data.length > 0) {
+      res.render("posts", { posts: data });
+    } else {
+      res.render("posts", { message: "no results" });
+    }
   }).catch((err) => {
     res.render("posts", { message: "no results" });
   })
 });
 
+app.get("/posts/add", (req, res) => {
+  blogService.getCategories()
+  .then(data => res.render("addPost", {categories: data}))
+  .catch(err => res.render("addPost", {categories: []}));
+})
 
 app.post("/posts/add", upload.single("featureImage"), (req, res) => {
   if (req.file) {
@@ -193,10 +219,6 @@ app.post("/posts/add", upload.single("featureImage"), (req, res) => {
   }
 })
 
-app.get("/posts/add", (req, res) => {
-  res.render('addPost')
-})
-
 app.get("/posts/:id", (req, res) => {
   blogService.getPostById(req.params.id).then((data) => {
     res.json(data);
@@ -204,6 +226,7 @@ app.get("/posts/:id", (req, res) => {
     res.json({ message: err });
   })
 })
+
 
 app.get("/blog/:id", async (req, res) => {
 
@@ -257,11 +280,37 @@ app.get("/blog/:id", async (req, res) => {
 
 app.get("/categories", function (req, res) {
   blogService.getCategories().then((data) => {
-    res.render('categories', { categories: data });
+    if (data.length > 0) {
+      res.render('categories', { categories: data });
+    } else {
+      res.render("categories", { message: "no results" });
+    }
   }).catch((err) => {
     res.render("categories", { message: "no results" });
   })
 });
+
+app.get("/categories/add", (req, res) => {
+  res.render('addCategory')
+})
+
+app.post("/categories/add", (req, res) => {
+  blogService.addCategory(req.body).then(() =>{
+    res.redirect("/categories")
+  })
+})
+
+app.get("/posts/delete/:id", (req,res) => {
+  blogService.deletePostById(req.params.id)
+  .then(() => res.redirect("/posts"))
+  .catch(err => res.status(500).send("Unable to Remove Post / Post not found"))
+})
+
+app.get("/categories/delete/:id", (req,res) => {
+  blogService.deleteCategoryById(req.params.id)
+  .then(() => res.redirect("/categories"))
+  .catch(err => res.status(500).send("Unable to Remove Category / Category not found"))
+})
 
 app.use((req, res) => {
   res.status(404).render('404');
@@ -273,3 +322,4 @@ blogService.initialize().then(() => {
 }).catch(() => {
   console.log('Unsuccesfull')
 })
+
